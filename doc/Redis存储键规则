@@ -1,0 +1,16 @@
+1、统一前缀prefix
+因为可能多组微服务使用同一个redis实例，固同一微服务体系的键，需统一前缀。
+前缀为一字符串，仅在redis配置中使用，和redis服务器ip、端口属于同一级别的配置信息。
+
+2、各id的API消息通道
+键规则：[prefix]apiMsg.[id]
+每个id均需订阅自身该频道，以实现API机制
+
+3、event消息通道
+键规则：[prefix]eventMsg.[eventName]
+当事件被触发时，推送到该频道
+
+4、queue消息缓存
+键规则：[prefix]queue.[queueName]
+该键存储为有序队列，左进右出
+

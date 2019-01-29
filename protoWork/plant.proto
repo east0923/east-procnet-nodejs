@@ -1,0 +1,41 @@
+syntax = "proto3";
+package redserv;
+
+// API往返底包：apiReq / apiRec /apiRes
+message apiMsg {
+    string     id            = 1; // 消息来源id
+    string     cmd           = 2; // 命令：req、rec、res
+    uint32     count         = 3; // 序号
+    apiReqInfo reqInfo       = 4; // 调用消息头，仅req时有用
+    apiResErr  resErr        = 5; // 错误项，仅res时有用
+    hubInfo    hubInfo       = 6; // 集线器信息
+    repeated string paramsTyp= 10; // 参数结构标记，长度与流一致，空项表明与前面的相同
+    repeated bytes  paramsBuf= 11; // 参数流，支持数组
+}
+
+// 调用消息头，仅req时有用
+message apiReqInfo {
+    string api = 1;
+    repeated string heads = 2;
+}
+
+// 集线器hub中转信息
+message hubInfo {
+    string hubId        = 1; // 集线器id
+    bytes  AccountId    = 5; // 用户Id
+}
+
+// err项模板
+message apiResErr {
+    sint32 code          = 1; // 错误代码，0为正常，正常时message和list无效
+    string message       = 2; // 内容字符串
+    repeated string list = 3; // 序列表
+}
+
+// Event事件消息包
+message eventMsg{
+    string id                = 1;  // 事件发起者id
+    hubInfo    hubInfo       = 6;  // 集线器信息
+    repeated string paramsTyp= 10; // 参数结构标记，长度与流一致，空项表明与前面的相同
+    repeated bytes  paramsBuf= 11; // 参数流，支持数组
+}

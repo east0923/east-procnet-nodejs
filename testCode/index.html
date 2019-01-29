@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="webClientWs.js"></script>
+</head>
+<body>
+<script>
+  var url=
+    //'ws://10.0.3.3:9500/ws';
+    (location.protocol==='http:'?'ws://':'wss://')+
+    location.host+'/ws';
+  const clientWs=new c_clientWs.c_client(null,url);
+  clientWs.apiCall('serv-a.hello',[{hello:'east'}],(err,json)=>{
+    if(err) console.log('WebClient -> Service API 失败，错误参数：'+JSON.stringify(err ));
+    else    console.log('WebClient -> Service API 成功，传输参数：'+JSON.stringify(json));
+  });
+  /* ====== API机制方法 ====== */
+  // API回调外部方法：apiCallback(count,errJsonStr,paramJsonStrs)
+  // API调用
+  function apiCall(api,paramJsonStrs,needCallback){
+    if(typeof needCallback==='undefined') needCallback=true;
+    // 内部记录count值
+    var count=0;
+    // 回调函数，不需要时为空
+    var callback=needCallback?
+      function(err,...params){
+        var errJsonStr=err?JSON.stringify(err):"";
+        var paramJsonStrs=params.map(i=>{return JSON.stringify(i)});
+        // 调用外部方法
+        apiCallback(count,errJsonStr,paramJsonStrs)
+      }
+      :null;
+
+    // 将参数转为json对象
+    var params=paramJsonStrs.map(i=>{return JSON.parse(i)});
+    // 内部调用
+    count=clientWs.apiCall(api,params,callback);
+    // 返回count值
+    return count
+  }
+
+  /* ====== Event机制方法 ====== */
+  // 接收事件触发方法：eventBookback(eventName,infoJsonStr,paramJsonStrs)
+  // 订阅事件
+  function eventBook(eventName){
+    clientWs.eventBook(eventName,function(info,...params){
+      var infoJsonStr=JSON.stringify(info);
+      var paramJsonStrs=params.map(i=>{return JSON.stringify(i)});
+      eventBookback(eventName,infoJsonStr,paramJsonStrs)
+    })
+  }
+  function eventCancel(eventName){
+    clientWs.eventCancel(eventName)
+  }
+
+  function apiCallback(count,errJsonStr,paramJsonStrs){
+    console.log('apiCallback: '+JSON.stringify([count,errJsonStr,paramJsonStrs]));
+  }
+  function eventBookback(eventName,infoJsonStr,paramJsonStrs) {
+    console.log('eventBookback: '+JSON.stringify([eventName,infoJsonStr,paramJsonStrs]));
+  }
+
+</script>
+</body>
+</html>

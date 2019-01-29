@@ -1,0 +1,110 @@
+{
+  "nested": {
+    "redserv": {
+      "nested": {
+        "apiMsg": {
+          "fields": {
+            "id": {
+              "type": "string",
+              "id": 1
+            },
+            "cmd": {
+              "type": "string",
+              "id": 2
+            },
+            "count": {
+              "type": "uint32",
+              "id": 3
+            },
+            "reqInfo": {
+              "type": "apiReqInfo",
+              "id": 4
+            },
+            "resErr": {
+              "type": "apiResErr",
+              "id": 5
+            },
+            "hubInfo": {
+              "type": "hubInfo",
+              "id": 6
+            },
+            "paramsTyp": {
+              "rule": "repeated",
+              "type": "string",
+              "id": 10
+            },
+            "paramsBuf": {
+              "rule": "repeated",
+              "type": "bytes",
+              "id": 11
+            }
+          }
+        },
+        "apiReqInfo": {
+          "fields": {
+            "api": {
+              "type": "string",
+              "id": 1
+            },
+            "heads": {
+              "rule": "repeated",
+              "type": "string",
+              "id": 2
+            }
+          }
+        },
+        "hubInfo": {
+          "fields": {
+            "hubId": {
+              "type": "string",
+              "id": 1
+            },
+            "AccountId": {
+              "type": "bytes",
+              "id": 5
+            }
+          }
+        },
+        "apiResErr": {
+          "fields": {
+            "code": {
+              "type": "sint32",
+              "id": 1
+            },
+            "message": {
+              "type": "string",
+              "id": 2
+            },
+            "list": {
+              "rule": "repeated",
+              "type": "string",
+              "id": 3
+            }
+          }
+        },
+        "eventMsg": {
+          "fields": {
+            "id": {
+              "type": "string",
+              "id": 1
+            },
+            "hubInfo": {
+              "type": "hubInfo",
+              "id": 6
+            },
+            "paramsTyp": {
+              "rule": "repeated",
+              "type": "string",
+              "id": 10
+            },
+            "paramsBuf": {
+              "rule": "repeated",
+              "type": "bytes",
+              "id": 11
+            }
+          }
+        }
+      }
+    }
+  }
+}
