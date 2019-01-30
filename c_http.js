@@ -1,5 +1,6 @@
 const fs=require('fs');
 const URL=require('url');
+const etools=require('./etools');
 const c_connRedis=require('./c_connRedis');
 
 // 功能函数
@@ -142,7 +143,7 @@ class c_server{
                 try{
                     await site.request(request, response);
                 } catch (e) {
-                    response.writeHead(500);
+                    response.writeHead(400);
                     if(this._showErrorToWeb) response.end(e.message);
                     else response.end('Server Error');
                     if(this._showErrorToLog) console.log(e);
@@ -154,7 +155,7 @@ class c_server{
             }
         });
         this.server.on('listening',()=>{
-            console.log(`[${this.labelText}] `+'Listen OK')
+            etools.log(`[${this.labelText}] `+'Listen OK')
         })
     }
 
@@ -188,7 +189,7 @@ class c_server{
     siteReg(siteObj,pathPrefix,domainPostfix){
         pathPrefix=pathPrefix||'/';
         this._sites.push({siteObj,pathPrefix,domainPostfix});
-        console.log(`[${this.labelText}] Reg pathPrefix:"${pathPrefix}"${domainPostfix?(' domainPostfix: '+domainPostfix):''} to `+siteObj.labelText);
+        etools.log(`[${this.labelText}] Reg pathPrefix:"${pathPrefix}"${domainPostfix?(' domainPostfix: '+domainPostfix):''} to `+siteObj.labelText);
     }
 
     get labelText(){
@@ -258,7 +259,7 @@ class c_siteStatic{
         // 认证当前请求对象
         await this._httpAuth.requestAuth(request);
         // 如果没有SessionId，则重新分配
-        if(!request.httpAuth.SessionId){
+        if(!request.reqAuth.SessionId){
             await this._httpAuth.setRequestNewSessionId(request);
         }
 
@@ -381,7 +382,7 @@ class c_httpAuth{
         await this.setSessionLogout(newId);
 
         // 修改认证信息
-        request.httpAuth.SessionId=newId;
+        request.reqAuth.SessionId=newId;
 
         // 添加头信息，写Cookie
         request.resHeaders.push('Set-Cookie: '+funcDict.getSetSessionIdHeaderStr(this._SessionIdKey,newId,domain));
@@ -423,17 +424,15 @@ class c_httpAuth{
         else {
             reqInfo=request.reqInfo;
             // SessionId为上次认证后的SessionId
-            reqInfo.SessionId=request.httpAuth.SessionId;
+            reqInfo.SessionId=request.reqAuth.SessionId;
         }
 
         // 写入认证信息
-        const httpAuth=request.httpAuth={
+        const reqAuth=request.reqAuth={
             SessionId:'',  // 认证后的SessionId
             AccountId:'',  // 认证后的AccountId
             Security:0,    // 安全级别
             ipUser:'',     // 根据ip地址认证的用户
-            httpErrCode:0, // http错误代码，非零则应直接
-            httpErrMsg:''  // http错误消息，需错误代码非零才有意义
         };
 
         // 1、如果提交信息有SessionId，先判定是否有效，有效则
@@ -443,17 +442,17 @@ class c_httpAuth{
             // 在有效期，才继续
             if(isOk){
                 // 写认证后的SessionId
-                httpAuth.SessionId=reqInfo.SessionId;
+                reqAuth.SessionId=reqInfo.SessionId;
 
                 // 读取Session信息
                 const info=await this.getSessionInfo(reqInfo.SessionId,['AccountId','Security']);
-                httpAuth.AccountId=info.AccountId||'';
-                httpAuth.Security =info.Security||0;
+                reqAuth.AccountId=info.AccountId||'';
+                reqAuth.Security =info.Security||0;
             }
         }
 
         // 2、如果SessionId无效，但有Token信息，尝试根据Token获取认证信息
-        if(!httpAuth.SessionId && reqInfo.token){
+        if(!reqAuth.SessionId && reqInfo.token){
 
         }
 

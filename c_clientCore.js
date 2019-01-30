@@ -4,6 +4,7 @@
 * 运行环境：Nodejs Browser
 *
 * */
+const etools    = require('./etools');
 const protoWork = require('./protoWork');
 const c_apiFunc = require('./c_apiFunc');
 const funcDict  = require('./funcDict');
@@ -33,14 +34,15 @@ class c_clientCore{
     // 订阅API相关消息
     this._conn.sub('apiMsg.'+this.id);
 
-    // 订阅
-
     /* 运行参数 */
     // api请求列表，以请求序号为key，value：[callback, recClock, timeOutClock]
     this.apiReqCache={};
     
     // 事件关联
     this._conn.onMessage=(...all)=>this._onMessage(...all);
+
+    // 输出日志
+    etools.log(`[${this.labelText}] Build`)
   }
 
   // 收到消息
@@ -157,12 +159,13 @@ class c_clientCore{
     // 解析参数
     const params=this._arry2params(reqMsg.paramsTyp,reqMsg.paramsBuf);
 
-    // 构造info对象
+    // 构造info对象，此处结构必须与c_hubWs中，ajaxApi调用组织的info一致
     const info={
       id:reqMsg.id,
       api:reqMsg.reqInfo.api,
       heads:{},
-      hubInfo:reqMsg.hubInfo
+      hubInfo:reqMsg.hubInfo,
+      reqAuth:reqMsg.reqAuth
     };
     // 补充info中的heads
     reqMsg.reqInfo.heads.forEach(item=>{
@@ -243,6 +246,9 @@ class c_clientCore{
     else if(funcOut&&Object.prototype.toString.call(funcOut)==='[object Promise]'){
       funcOut
         .then((...params)=> {
+          // 兼容async中return数组，表示多个参数
+          if(params.length===1 && Array.isArray(params[0])) params=params[0];
+
           funcParams = params;
           process.nextTick(() => doResponse())
         })
@@ -287,6 +293,8 @@ class c_clientCore{
   apiReg(api,func){
     // 委托给内部处理
     this._apiFunc.reg(api,func);
+    // 输出日志
+    etools.log(`[${this.labelText}] RegApi: `+api.toString());
   }
   // 调用API方法
   apiCall(apiObj,params,callback){
@@ -328,7 +336,7 @@ class c_clientCore{
       // 错误回调
       callback(protoWork.create('apiResErr',{
         code:10,
-        msg:'调用PI请求时，对方5s内未收到'
+        msg:'调用API请求时，对方5s内未收到'
       }))
     },5e3);
     // 30秒超时定时器
@@ -422,6 +430,11 @@ class c_clientCore{
     }
     // 添加到队列
     this._conn.queuePush(queueName,...bufs);
+  }
+
+  /* ========= 公用属性 =========*/
+  get labelText(){
+    return `Client(${this.id})`;
   }
 }
 

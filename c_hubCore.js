@@ -21,15 +21,15 @@ const c_connRedis=require('./c_connRedis');
 * 需在继承类中实现的方法
 *
 * pubClient(id,topic,buf)
-* getIdInfo(id) - async
+* getIdReqAuth(id) - async
 * */
 
 /*
 * 可选在代码中实现的检查方法，均为async类型
 *
-* check_eventBook(id,idInfo,eventName)：事件订阅验证
-* check_eventEmit(id,idInfo,eventName)：事件推送验证
-* check_apiReq   (id,idInfo,targetId )：调用API验证
+* check_eventBook(id,reqAuth,eventName)：事件订阅验证
+* check_eventEmit(id,reqAuth,eventName)：事件推送验证
+* check_apiReq   (id,reqAuth,targetId )：调用API验证
 * */
 
 class c_hubCore {
@@ -106,10 +106,12 @@ class c_hubCore {
       // 有检验方法
       else {
         try{
-          // 获取账号信息
-          const idInfo=await this.getIdInfo(id);
+          // 获取账号信息，获取不到则不用处理
+          const reqAuth=await this.getIdReqAuth(id);
+          // 没有获取到，则验证失败
+          if(!reqAuth) isOk=false;
           // 调用检验方法，此时right即为eventName
-          isOk=await this.check_eventBook(id,idInfo,right);
+          else isOk=await this.check_eventBook(id,reqAuth,right);
         } catch (e) {
           // 出错，拒绝
           etools.log(`[${this.hubId} Warn] clientSub Check Throw Error`);
@@ -173,15 +175,19 @@ class c_hubCore {
               // 有验证程序
               else {
                 // 获取账号信息
-                const idInfo=await this.getIdInfo(id);
+                const reqAuth=await this.getIdReqAuth(id);
+                // 没有获取到，则验证失败
+                if(!reqAuth) isOk=false;
                 // 调用检验方法，此时right为对方id
-                isOk=await this.check_apiReq(id,idInfo,right);
+                else isOk=await this.check_apiReq(id,reqAuth,right);
                 // 允许调用时，写入hubInfo
                 if(isOk){
+                  // 写集线器信息
                   apiMsg.hubInfo= {
-                    hubId: this.hubId,
-                    AccountId: idInfo.AccountId
+                    hubId: this.hubId
                   };
+                  // 带入身份信息
+                  apiMsg.reqAuth=reqAuth;
                   let msgTyp;
                   [msgTyp,msg]=protoWork.encode(apiMsg);
                 }
@@ -194,16 +200,18 @@ class c_hubCore {
           if(!this.check_eventEmit) isOk=false;
           // 有验证程序
           else {
-            // 获取账号信息
-            const idInfo=await this.getIdInfo(id);
+            // 获取请求权限
+            const reqAuth=await this.getIdReqAuth(id);
+            // 没有获取到，则验证失败
+            if(!reqAuth) isOk=false;
             // 调用检验方法，此时right为eventName
-            isOk=await this.check_eventEmit(id,idInfo,right);
+            else isOk=await this.check_eventEmit(id,reqAuth,right);
             // 如果验证通过，更新msg流，写入hubInfo信息
             if(isOk){
               const eventMsg=protoWork.decode('eventMsg',msg);
               eventMsg.hubInfo= {
                 hubId: this.hubId,
-                AccountId: idInfo.AccountId
+                AccountId: reqAuth.AccountId
               };
               let msgTyp;
               [msgTyp,msg]=protoWork.encode(eventMsg);

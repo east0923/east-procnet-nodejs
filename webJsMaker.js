@@ -13,7 +13,7 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const path   =require('path');
 
 const config = {
-  mode: 'development',
+  //mode: 'development',
   entry: {
     webClientWs: path.resolve(__dirname,'c_clientWs.js'),
   },
@@ -23,7 +23,10 @@ const config = {
       {
         loader: 'babel-loader',
         test: /\.js$/,
-        exclude:'/node_modules/',
+        exclude:/\/node_modules\//,
+        options: {
+          plugins: ['transform-runtime']
+        }
       },
       {
         loader: 'url-loader',

@@ -28,6 +28,10 @@
               "type": "hubInfo",
               "id": 6
             },
+            "reqAuth": {
+              "type": "apiReqAuth",
+              "id": 7
+            },
             "paramsTyp": {
               "rule": "repeated",
               "type": "string",
@@ -58,10 +62,26 @@
             "hubId": {
               "type": "string",
               "id": 1
+            }
+          }
+        },
+        "apiReqAuth": {
+          "fields": {
+            "SessionId": {
+              "type": "string",
+              "id": 1
             },
             "AccountId": {
-              "type": "bytes",
-              "id": 5
+              "type": "string",
+              "id": 2
+            },
+            "Security": {
+              "type": "int32",
+              "id": 3
+            },
+            "ipUser": {
+              "type": "string",
+              "id": 4
             }
           }
         },

@@ -1,0 +1,14 @@
+module.exports={
+  // 微服务平台的redis配置
+  redis_proc:{
+    host:'127.0.0.1',
+    port:6379,
+    prefix:'proc#'
+  },
+  // http服务中认证管理的Redis配置
+  redis_http:{
+    host:'127.0.0.1',
+    port:6379,
+    prefix:'http#'
+  }
+};
