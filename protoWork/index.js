@@ -29,9 +29,9 @@ class c_protoWork{
     // 获取原型类型
     const typ=protoMid.$type.name;
     // 预备proto格式
-    const protoObj=this._root.lookupType(typ);
+    //const protoObj=this._root.lookupType(typ);
     // 取得流并反馈
-    return [typ,protoObj.encode(protoMid).finish()];
+    return [typ,protoMid.$type.encode(protoMid).finish()];
   }
 
   decode(typ,buf){

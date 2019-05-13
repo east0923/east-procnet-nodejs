@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='redserv',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x0bplant.proto\x12\x07redserv\"\xe9\x01\n\x06\x61piMsg\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0b\n\x03\x63md\x18\x02 \x01(\t\x12\r\n\x05\x63ount\x18\x03 \x01(\r\x12$\n\x07reqInfo\x18\x04 \x01(\x0b\x32\x13.redserv.apiReqInfo\x12\"\n\x06resErr\x18\x05 \x01(\x0b\x32\x12.redserv.apiResErr\x12!\n\x07hubInfo\x18\x06 \x01(\x0b\x32\x10.redserv.hubInfo\x12$\n\x07reqAuth\x18\x07 \x01(\x0b\x32\x13.redserv.apiReqAuth\x12\x11\n\tparamsTyp\x18\n \x03(\t\x12\x11\n\tparamsBuf\x18\x0b \x03(\x0c\"(\n\napiReqInfo\x12\x0b\n\x03\x61pi\x18\x01 \x01(\t\x12\r\n\x05heads\x18\x02 \x03(\t\"\x18\n\x07hubInfo\x12\r\n\x05hubId\x18\x01 \x01(\t\"T\n\napiReqAuth\x12\x11\n\tSessionId\x18\x01 \x01(\t\x12\x11\n\tAccountId\x18\x02 \x01(\t\x12\x10\n\x08Security\x18\x03 \x01(\x05\x12\x0e\n\x06ipUser\x18\x04 \x01(\t\"8\n\tapiResErr\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x11\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x0c\n\x04list\x18\x03 \x03(\t\"_\n\x08\x65ventMsg\x12\n\n\x02id\x18\x01 \x01(\t\x12!\n\x07hubInfo\x18\x06 \x01(\x0b\x32\x10.redserv.hubInfo\x12\x11\n\tparamsTyp\x18\n \x03(\t\x12\x11\n\tparamsBuf\x18\x0b \x03(\x0c\x62\x06proto3')
+  serialized_pb=_b('\n\x0bplant.proto\x12\x07redserv\"\xea\x01\n\x06\x61piMsg\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0b\n\x03\x63md\x18\x02 \x01(\t\x12\r\n\x05\x63ount\x18\x03 \x01(\r\x12$\n\x07reqInfo\x18\x04 \x01(\x0b\x32\x13.redserv.apiReqInfo\x12\"\n\x06resErr\x18\x05 \x01(\x0b\x32\x12.redserv.apiResErr\x12!\n\x07hubInfo\x18\x06 \x01(\x0b\x32\x10.redserv.hubInfo\x12%\n\x08httpAuth\x18\x07 \x01(\x0b\x32\x13.redserv.c_httpAuth\x12\x11\n\tparamsTyp\x18\n \x03(\t\x12\x11\n\tparamsBuf\x18\x0b \x03(\x0c\":\n\napiReqInfo\x12\x0b\n\x03\x61pi\x18\x01 \x01(\t\x12\r\n\x05heads\x18\x02 \x03(\t\x12\x10\n\x08language\x18\x03 \x01(\t\"\x18\n\x07hubInfo\x12\r\n\x05hubId\x18\x01 \x01(\t\"\xdd\x01\n\nc_httpAuth\x12\x0e\n\x06\x64\x65vTyp\x18\x01 \x01(\t\x12\r\n\x05\x64\x65vNo\x18\x02 \x01(\t\x12\x0b\n\x03sid\x18\x03 \x01(\t\x12\x0f\n\x07\x61uthTyp\x18\x04 \x01(\t\x12\r\n\x05ipRaw\x18\x05 \x01(\x0c\x12\x0c\n\x04host\x18\x06 \x01(\t\x12\x11\n\tuserAgent\x18\x07 \x01(\t\x12\x0e\n\x06\x64omain\x18\x08 \x01(\t\x12\x11\n\tSessionId\x18\x0b \x01(\t\x12\r\n\x05Token\x18\x0c \x01(\t\x12\x11\n\tAccountId\x18\r \x01(\t\x12\x0e\n\x06IpUser\x18\x0e \x01(\t\x12\r\n\x05IotOk\x18\x0f \x01(\x08\"8\n\tapiResErr\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x11\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x0c\n\x04list\x18\x03 \x03(\t\"_\n\x08\x65ventMsg\x12\n\n\x02id\x18\x01 \x01(\t\x12!\n\x07hubInfo\x18\x06 \x01(\x0b\x32\x10.redserv.hubInfo\x12\x11\n\tparamsTyp\x18\n \x03(\t\x12\x11\n\tparamsBuf\x18\x0b \x03(\x0c\x62\x06proto3')
 )
 
 
@@ -75,7 +75,7 @@ _APIMSG = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='reqAuth', full_name='redserv.apiMsg.reqAuth', index=6,
+      name='httpAuth', full_name='redserv.apiMsg.httpAuth', index=6,
       number=7, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -108,7 +108,7 @@ _APIMSG = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=25,
-  serialized_end=258,
+  serialized_end=259,
 )
 
 
@@ -133,6 +133,13 @@ _APIREQINFO = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='language', full_name='redserv.apiReqInfo.language', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -145,8 +152,8 @@ _APIREQINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=260,
-  serialized_end=300,
+  serialized_start=261,
+  serialized_end=319,
 )
 
 
@@ -176,43 +183,106 @@ _HUBINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=302,
-  serialized_end=326,
+  serialized_start=321,
+  serialized_end=345,
 )
 
 
-_APIREQAUTH = _descriptor.Descriptor(
-  name='apiReqAuth',
-  full_name='redserv.apiReqAuth',
+_C_HTTPAUTH = _descriptor.Descriptor(
+  name='c_httpAuth',
+  full_name='redserv.c_httpAuth',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='SessionId', full_name='redserv.apiReqAuth.SessionId', index=0,
+      name='devTyp', full_name='redserv.c_httpAuth.devTyp', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='AccountId', full_name='redserv.apiReqAuth.AccountId', index=1,
+      name='devNo', full_name='redserv.c_httpAuth.devNo', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='Security', full_name='redserv.apiReqAuth.Security', index=2,
-      number=3, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
+      name='sid', full_name='redserv.c_httpAuth.sid', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='ipUser', full_name='redserv.apiReqAuth.ipUser', index=3,
+      name='authTyp', full_name='redserv.c_httpAuth.authTyp', index=3,
       number=4, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='ipRaw', full_name='redserv.c_httpAuth.ipRaw', index=4,
+      number=5, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b(""),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='host', full_name='redserv.c_httpAuth.host', index=5,
+      number=6, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='userAgent', full_name='redserv.c_httpAuth.userAgent', index=6,
+      number=7, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='domain', full_name='redserv.c_httpAuth.domain', index=7,
+      number=8, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='SessionId', full_name='redserv.c_httpAuth.SessionId', index=8,
+      number=11, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='Token', full_name='redserv.c_httpAuth.Token', index=9,
+      number=12, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='AccountId', full_name='redserv.c_httpAuth.AccountId', index=10,
+      number=13, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='IpUser', full_name='redserv.c_httpAuth.IpUser', index=11,
+      number=14, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='IotOk', full_name='redserv.c_httpAuth.IotOk', index=12,
+      number=15, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -228,8 +298,8 @@ _APIREQAUTH = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=328,
-  serialized_end=412,
+  serialized_start=348,
+  serialized_end=569,
 )
 
 
@@ -273,8 +343,8 @@ _APIRESERR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=414,
-  serialized_end=470,
+  serialized_start=571,
+  serialized_end=627,
 )
 
 
@@ -325,19 +395,19 @@ _EVENTMSG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=472,
-  serialized_end=567,
+  serialized_start=629,
+  serialized_end=724,
 )
 
 _APIMSG.fields_by_name['reqInfo'].message_type = _APIREQINFO
 _APIMSG.fields_by_name['resErr'].message_type = _APIRESERR
 _APIMSG.fields_by_name['hubInfo'].message_type = _HUBINFO
-_APIMSG.fields_by_name['reqAuth'].message_type = _APIREQAUTH
+_APIMSG.fields_by_name['httpAuth'].message_type = _C_HTTPAUTH
 _EVENTMSG.fields_by_name['hubInfo'].message_type = _HUBINFO
 DESCRIPTOR.message_types_by_name['apiMsg'] = _APIMSG
 DESCRIPTOR.message_types_by_name['apiReqInfo'] = _APIREQINFO
 DESCRIPTOR.message_types_by_name['hubInfo'] = _HUBINFO
-DESCRIPTOR.message_types_by_name['apiReqAuth'] = _APIREQAUTH
+DESCRIPTOR.message_types_by_name['c_httpAuth'] = _C_HTTPAUTH
 DESCRIPTOR.message_types_by_name['apiResErr'] = _APIRESERR
 DESCRIPTOR.message_types_by_name['eventMsg'] = _EVENTMSG
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -363,12 +433,12 @@ hubInfo = _reflection.GeneratedProtocolMessageType('hubInfo', (_message.Message,
   ))
 _sym_db.RegisterMessage(hubInfo)
 
-apiReqAuth = _reflection.GeneratedProtocolMessageType('apiReqAuth', (_message.Message,), dict(
-  DESCRIPTOR = _APIREQAUTH,
+c_httpAuth = _reflection.GeneratedProtocolMessageType('c_httpAuth', (_message.Message,), dict(
+  DESCRIPTOR = _C_HTTPAUTH,
   __module__ = 'plant_pb2'
-  # @@protoc_insertion_point(class_scope:redserv.apiReqAuth)
+  # @@protoc_insertion_point(class_scope:redserv.c_httpAuth)
   ))
-_sym_db.RegisterMessage(apiReqAuth)
+_sym_db.RegisterMessage(c_httpAuth)
 
 apiResErr = _reflection.GeneratedProtocolMessageType('apiResErr', (_message.Message,), dict(
   DESCRIPTOR = _APIRESERR,

@@ -14,8 +14,6 @@ const c_connRedis=require('./c_connRedis');
 const c_clientCore  = require('./c_clientCore');
 class c_client extends c_clientCore{
   constructor(clientConf){
-    // 验证id符合后端服务规范，不符合则抛出错误
-    if(funcDict.idType(clientConf.id)!=='serv') throw new Error('Redis Service Id Type Error');
     // 创建连接类
     const conn=new c_connRedis.c_subpub(clientConf.redisConf);
     // 构造客户端类
@@ -27,5 +25,4 @@ class c_client extends c_clientCore{
 module.exports={
   c_client,
   protoWork:require('./protoWork'),
-  idType:funcDict.idType
 };

@@ -10,14 +10,8 @@ const etools=require('./etools');
 const funcDict=require('./funcDict');
 
 /* ====== 通用连接 ====== */
-/**
- * 配置项说明：
- * url: websocket连接网址
- * id：自身标识
- * authStr：自身标识验证字符串
- * cacheSec：消息缓存时间，单位秒
- */
 class c_conn{
+    // 配置项在c_client构造过程中生成
     constructor(conf){
         // 配置信息原样记录
         this.conf=conf;
@@ -25,6 +19,8 @@ class c_conn{
         this._sendCache=[];
         // 重连计次，0表示初次连接
         this._reConnCount=0;
+        // 重连读秒，超过重连计次或超过10s，执行连接
+        this._reConnSec=0;
         // ws连接实例
         this._ws=null;
         // 空闲时间
@@ -55,7 +51,7 @@ class c_conn{
         // 如果已经关闭，销毁
         if(this._isClosed){
             // 如果有连接实例，关闭
-            if(typeof this._ws==='object') this._ws.close();
+            if(this._ws) this._ws.close();
             // 终止秒循环
             clearInterval(this._secLoopClock);
             // 不再继续
@@ -66,16 +62,16 @@ class c_conn{
         /* ===== 连接维护 ===== */
         // 如果可用，重连计次回0
         if(usable) this._reConnCount=0;
-        // 不可用，但有ws实例，表明连接在尝试过程中，不用处理
-        else if(this._ws) {}
-        // 不可用，没有ws实例，创建实例
-        else {
-            // 此处先占位，并不可用
-            this._ws=true;
-            // 根据重连计次，决定异步连接等待时间
-            setTimeout(()=>this._buildWs(),1000*Math.min(5,this._reConnCount));
-            // 重连计次累加
-            this._reConnCount++;
+        // 不可用，且没有ws实例，需重建连接
+        else if(!this._ws) {
+            // 重连读秒+1
+            this._reConnSec++;
+            // 符合重连条件
+            if(this._reConnSec>Math.min(10,this._reConnCount)){
+                this._reConnSec=0;   // 重连读秒回0
+                this._reConnCount++; // 重连计次+1
+                this._buildWs();     // 建立连接
+            }
         }
 
         /* ===== 缓存消息发送 ===== */
@@ -107,7 +103,7 @@ class c_conn{
 
         /* ===== 心跳机制 ===== */
         // 此处以有_ws对象为标准判定是否可用
-        if(this._ws&&this._ws!==true){
+        if(this._ws){
             this.empSec++;
             // 超过50秒，断开
             if(this.empSec>55) {
@@ -121,10 +117,16 @@ class c_conn{
 
     // 建立连接实例
     _buildWs(){
+        const conf=this.conf;
         // 完整地址
-        const fullUrl=this.conf.url+
-            '?id='+this.conf.id+
-            '&authStr='+this.conf.authStr;
+        let fullUrl=conf.url+
+            '?id='     +conf.id+
+            '&authStr='+conf.authStr+
+            '&devId='  +conf.devTyp+'_'+conf.devNo;
+        if(conf.devSt&&conf.devPass){
+            fullUrl+='&devSt='  +conf.devSt;
+            fullUrl+='&devPass='+conf.devPass;
+        }
 
         // 创建连接实例
         this._ws=new c_ws(fullUrl,'*');
@@ -136,7 +138,7 @@ class c_conn{
         this.empSec=0;
         ws.onopen=(...all)=>{
             if(ws!==this._ws) return;
-            etools.log(`[${this.conf.id}] Connected by clientWs.`);
+            etools.log('Connected by clientWs: '+fullUrl);
             // 重新订阅
             for(const topic in this._subDict){
                 if(!this._subDict.hasOwnProperty(topic)) continue;
@@ -300,38 +302,70 @@ class c_conn{
 const c_clientCore  = require('./c_clientCore');
 class c_client extends c_clientCore{
     // ws客户端仅有连接配置信息，身份信息通过http连接过程完成
-    constructor(conf,connUrl){
-        /* 整理客户端配置 */
-        // 无客户端配置，则给空对象
-        if(!conf) conf={};
-        // 连接配置为字符串，则包装成对象写入url项
-        if(typeof connUrl==='string') conf.url=connUrl;
+    /*
+    * 构造函数中第一项url参数会写入conf中的url节点
+    * 最终配置项说明：
+    * url：WebSocket连接的地址
+    * 【http层身份标识】
+    * devTyp ：连接设备类型，默认浏览器为web，后台为nodejs，Iot应用应外部传入
+    * devNo  ：设备编号，默认浏览器随机生成并存储在LocalStorage，后台始终随机，Iot应用应外部传入
+    * devSt  ：设备时间戳(毫秒)，仅适用于后台Iot设备身份认证
+    * devPass：连接密码，仅适用于后台Iot设备身份认证
+    * 【其他配置】
+    * cacheSec：连接不可用时，消息缓存时间，单位为秒。默认为5秒。
+    * 【自动生成，不可配置的项目】
+    * id：websocket层的id
+    * authStr：websocket防冒充的连接密码
+    *
+    * */
+    constructor(url,conf={}){
+        /* 构造配置兼容及整理 */
+        // 推荐构造方式，第一项给url，第二项给可选参数
+        if(typeof url==='string') conf.url=url;
+        // 兼容老版本，在第一项给conf对象
+        else if(url) conf=url;
+        // 兼容老版本，第一项为空，第二项给url
+        else if(typeof conf==='string') conf={url:conf};
+        // 兼容老版本，第二线给conf对象，此时不用处理
 
-        // 如果外部配置了id，则id和authStr均从conf中获取
-        if(conf.id){
-            conf.authStr=conf.authStr||'';
+
+        /* http层身份认证信息整理 */
+        // 未配置devTyp时的自动配置
+        if(!conf.devTyp) conf.devTyp=etools.isNode?'nodejs':'web';
+        // 未配置devNo时的自动配置
+        if(conf.devNo) {}
+        else if(etools.isNode) conf.devNo=etools.ranStr(16,'base62');
+        else {
+            conf.devNo=localStorage.getItem('devNo');
+            if(!conf.devNo) {
+                conf.devNo=etools.ranStr(16,'base62');
+                localStorage.setItem('devNo',conf.devNo);
+            }
         }
-        // 未配置id，node环境，id和authStr均为随机字符串
-        else if(etools.isNode){
+
+        /* 自动生成websocket层身份：id & authStr */
+        // node环境，id和authStr均为随机字符串
+        if(etools.isNode){
             conf.id=etools.ranStr(16,'base62');
             conf.authStr=etools.ranStr(10,'base62');
         }
-        // 未配置id，浏览器环境，尝试读localStorage，没有再随机
+        // 浏览器环境，尝试读sessionStorage，没有再随机
         else{
             // 尝试读取localStorage
-            conf.id     =localStorage.getItem('eastProcId_'+conf.url);
-            conf.authStr=localStorage.getItem('eastProcAuthStr_'+conf.url);
-            // 本地获取失败
+            conf.id     =sessionStorage.getItem('wsId_'+conf.url);
+            conf.authStr=sessionStorage.getItem('wsAuth_'+conf.url);
+            // 本地获取失败，则自动生成并记录
             if(!conf.id || !conf.authStr){
                 // 随机生成
                 conf.id=etools.ranStr(16,'base62');
                 conf.authStr=etools.ranStr(10,'base62');
                 // 记录到localStorage
-                localStorage.setItem('eastProcId_'+conf.url,conf.id);
-                localStorage.setItem('eastProcAuthStr_'+conf.url,conf.authStr);
+                sessionStorage.setItem('wsId_'+conf.url,conf.id);
+                sessionStorage.setItem('wsAuth_'+conf.url,conf.authStr);
             }
         }
-        // connConf中消息缓存时间，默认5秒
+
+        /* connConf中消息缓存时间，默认5秒 */
         conf.cacheSec=conf.cacheSec||5;
 
         /* 建立连接，并生成 */
@@ -344,9 +378,171 @@ class c_client extends c_clientCore{
 const expOut={
     c_client,
     protoWork:require('./protoWork'),
-    idType:funcDict.idType
 };
 module.exports=expOut;
 
 // 前端写到window中
 if(!etools.isNode) window.c_clientWs=expOut;
+
+/* 添加前端IE不支持的数组方法 */
+[Array,Uint8Array].forEach(arry=>{
+    var _array=arry;
+    // slice
+    if (!_array.prototype.slice) {
+        //Returns a new ArrayBuffer whose contents are a copy of this ArrayBuffer's
+        //bytes from `begin`, inclusive, up to `end`, exclusive
+        _array.prototype.slice = function (begin, end) {
+            //If `begin` is unspecified, Chrome assumes 0, so we do the same
+            if (begin === void 0) {
+                begin = 0;
+            }
+
+            //If `end` is unspecified, the new ArrayBuffer contains all
+            //bytes from `begin` to the end of this ArrayBuffer.
+            if (end === void 0) {
+                end = this.byteLength;
+            }
+
+            //Chrome converts the values to integers via flooring
+            begin = Math.floor(begin);
+            end = Math.floor(end);
+
+            //If either `begin` or `end` is negative, it refers to an
+            //index from the end of the array, as opposed to from the beginning.
+            if (begin < 0) {
+                begin += this.byteLength;
+            }
+            if (end < 0) {
+                end += this.byteLength;
+            }
+
+            //The range specified by the `begin` and `end` values is clamped to the
+            //valid index range for the current array.
+            begin = Math.min(Math.max(0, begin), this.byteLength);
+            end = Math.min(Math.max(0, end), this.byteLength);
+
+            //If the computed length of the new ArrayBuffer would be negative, it
+            //is clamped to zero.
+            if (end - begin <= 0) {
+                return new _array(0);
+            }
+
+            var result=new _array(end - begin);
+
+            for(var i=0;i<end - begin;i++){
+                result[i]=this[begin+i];
+            }
+
+            return result;
+        };
+    }
+    // indexOf
+    if (!_array.prototype.indexOf) {
+        _array.prototype.indexOf=function(searchElement, fromIndex) {
+
+            var k;
+
+            // 1. Let o be the result of calling ToObject passing
+            //    the this value as the argument.
+            if (this == null) {
+                throw new TypeError('"this" is null or not defined');
+            }
+
+            var o = Object(this);
+
+            // 2. Let lenValue be the result of calling the Get
+            //    internal method of o with the argument "length".
+            // 3. Let len be ToUint32(lenValue).
+            var len = o.length >>> 0;
+
+            // 4. If len is 0, return -1.
+            if (len === 0) {
+                return -1;
+            }
+
+            // 5. If argument fromIndex was passed let n be
+            //    ToInteger(fromIndex); else let n be 0.
+            var n = fromIndex | 0;
+
+            // 6. If n >= len, return -1.
+            if (n >= len) {
+                return -1;
+            }
+
+            // 7. If n >= 0, then Let k be n.
+            // 8. Else, n<0, Let k be len - abs(n).
+            //    If k is less than 0, then let k be 0.
+            k = Math.max(n >= 0 ? n : len - Math.abs(n), 0);
+
+            // 9. Repeat, while k < len
+            while (k < len) {
+                // a. Let Pk be ToString(k).
+                //   This is implicit for LHS operands of the in operator
+                // b. Let kPresent be the result of calling the
+                //    HasProperty internal method of o with argument Pk.
+                //   This step can be combined with c
+                // c. If kPresent is true, then
+                //    i.  Let elementK be the result of calling the Get
+                //        internal method of o with the argument ToString(k).
+                //   ii.  Let same be the result of applying the
+                //        Strict Equality Comparison Algorithm to
+                //        searchElement and elementK.
+                //  iii.  If same is true, return k.
+                if (k in o && o[k] === searchElement) {
+                    return k;
+                }
+                k++;
+            }
+            return -1;
+        };
+    }
+    // includes
+    if (!_array.prototype.includes) {
+        _array.prototype.includes=function(valueToFind, fromIndex) {
+
+            if (this == null) {
+                throw new TypeError('"this" is null or not defined');
+            }
+
+            // 1. Let O be ? ToObject(this value).
+            var o = Object(this);
+
+            // 2. Let len be ? ToLength(? Get(O, "length")).
+            var len = o.length >>> 0;
+
+            // 3. If len is 0, return false.
+            if (len === 0) {
+                return false;
+            }
+
+            // 4. Let n be ? ToInteger(fromIndex).
+            //    (If fromIndex is undefined, this step produces the value 0.)
+            var n = fromIndex | 0;
+
+            // 5. If n ≥ 0, then
+            //  a. Let k be n.
+            // 6. Else n < 0,
+            //  a. Let k be len + n.
+            //  b. If k < 0, let k be 0.
+            var k = Math.max(n >= 0 ? n : len - Math.abs(n), 0);
+
+            function sameValueZero(x, y) {
+                return x === y || (typeof x === 'number' && typeof y === 'number' && isNaN(x) && isNaN(y));
+            }
+
+            // 7. Repeat, while k < len
+            while (k < len) {
+                // a. Let elementK be the result of ? Get(O, ! ToString(k)).
+                // b. If SameValueZero(valueToFind, elementK) is true, return true.
+                if (sameValueZero(o[k], valueToFind)) {
+                    return true;
+                }
+                // c. Increase k by 1.
+                k++;
+            }
+
+            // 8. Return false
+            return false;
+        }
+    }
+});

@@ -13,62 +13,62 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const path   =require('path');
 
 const config = {
-  //mode: 'development',
-  entry: {
-    webClientWs: path.resolve(__dirname,'c_clientWs.js'),
-  },
-  context:path.resolve(__dirname),
-  module: {
-    rules: [
-      {
-        loader: 'babel-loader',
-        test: /\.js$/,
-        exclude:/\/node_modules\//,
-        options: {
-          plugins: ['transform-runtime']
-        }
-      },
-      {
-        loader: 'url-loader',
-        test: /\.proto$/,
-        exclude:'/node_modules/',
-      }
-    ]
-  },
-  output: {
-    path: path.resolve(__dirname,'demo'),
-    filename: '[name].js'
-  },
-  optimization:{
-    minimizer:[
-      new UglifyJsPlugin({
-        uglifyOptions: {
-          compress: {
-            warnings: false
-          }
-        },
-        sourceMap: true,
-        parallel: true
-      })
-    ]
-  }
+    //mode: 'development',
+    entry: {
+        webClientWs: path.resolve(__dirname,'c_clientWs.js'),
+    },
+    context:path.resolve(__dirname),
+    module: {
+        rules: [
+            {
+                loader: 'babel-loader',
+                test: /\.js$/,
+                exclude:/\/node_modules\//,
+                options: {
+                    plugins: ['transform-runtime'],
+                }
+            },
+            {
+                loader: 'url-loader',
+                test: /\.proto$/,
+                exclude:'/node_modules/',
+            }
+        ]
+    },
+    output: {
+        path: path.resolve(__dirname,'dist-static/js/'),
+        filename: '[name].js'
+    },
+    optimization:{
+        minimizer:[
+            new UglifyJsPlugin({
+                uglifyOptions: {
+                    compress: {
+                        warnings: false
+                    }
+                },
+                sourceMap: true,
+                parallel: true
+            })
+        ]
+    }
 };
 
 webpack(config, (err, stats) => {
-  if (err) throw err
+    if (err) throw err
 
-  process.stdout.write(stats.toString({
-    colors: true,
-    modules: false,
-    children: false, // If you are using ts-loader, setting this to true will make TypeScript errors show up during build.
-    chunks: false,
-    chunkModules: false
-  }) + '\n\n')
+    process.stdout.write(stats.toString({
+        colors: true,
+        modules: false,
+        children: false, // If you are using ts-loader, setting this to true will make TypeScript errors show up during build.
+        chunks: false,
+        chunkModules: false
+    }) + '\n\n')
 
-  if (stats.hasErrors()) {
-    console.log('  Build failed with errors.\n')
-    process.exit(1)
-  }
+    if (stats.hasErrors()) {
+        console.log('  Build failed with errors.\n')
+        process.exit(1)
+    }
 
-  console.log('  Build complete.\n')
+    console.log('  Build complete.\n')
 })

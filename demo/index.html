@@ -5,7 +5,11 @@
     <title>Title</title>
     <script src="webClientWs.js"></script>
     <script>
-        var proc=new c_clientWs.c_client(null,'ws://localhost:9988/ws')
+        var proc=new c_clientWs.c_client('ws://localhost:9988/api/',{
+            devTyp:'screen',
+            devSt:Date.now(),
+            devPass:'helloPass'
+        })
     </script>
 </head>
 <body>

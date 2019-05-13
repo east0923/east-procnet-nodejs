@@ -9,28 +9,41 @@ message apiMsg {
     apiReqInfo reqInfo       = 4; // 调用消息头，仅req时有用
     apiResErr  resErr        = 5; // 错误项，仅res时有用
     hubInfo    hubInfo       = 6; // 集线器信息
-    apiReqAuth reqAuth       = 7; // 请求认证身份
+    c_httpAuth httpAuth      = 7; // 请求认证身份
     repeated string paramsTyp= 10; // 参数结构标记，长度与流一致，空项表明与前面的相同
     repeated bytes  paramsBuf= 11; // 参数流，支持数组
 }
 
 // 调用消息头，仅req时有用，此处的reqInfo与http请求中的不相干
 message apiReqInfo {
-    string api = 1;
-    repeated string heads = 2;
+    string api = 1; // 调用API名称
+    repeated string heads = 2; // 头信息
+    string language = 3; // 倾向语言，为空时应按zh处理
 }
 
 // 集线器hub中转信息
 message hubInfo {
-    string hubId        = 1; // 集线器id
+    string hubId     = 1; // 集线器id
 }
 
 // 请求认证身份，与httpAuth中的reqAuth结构一致
-message apiReqAuth {
-    string SessionId = 1;
-    string AccountId = 2;
-    int32  Security  = 3;
-    string ipUser    = 4;
+message c_httpAuth {
+    // 身份认证请求信息
+    string devTyp    = 1; // 设备类别
+    string devNo     = 2; // 设备标识号
+    string sid       = 3; // Web端使用，未经认证的SessionId
+    string authTyp   = 4; // 身份认证类别
+    bytes  ipRaw     = 5; // ip地址转流：4字节为ipv4；16字节为ipv6
+    string host      = 6; // 请求中的host信息
+    string userAgent = 7; // 浏览器信息
+    string domain    = 8; // 匹配到的请求域，比host简化或相同
+
+    // 身份认证认可信息
+    string SessionId = 11; // 经认可的SessionId
+    string Token     = 12; // ios与android使用
+    string AccountId = 13; // 用户账号Id
+    string IpUser    = 14; // 后端服务间，根据ip地址识别用户
+    bool   IotOk     = 15; // 物联网认可，表示devTyp和devNo经验证可靠
 }
 
 // err项模板

@@ -2,8 +2,155 @@ const c_hubCore=require('./c_hubCore');
 let WebSocket; // 创建c_hubWs时才引用npm项目ws
 const etools=require('./etools');
 const url=require('url');
+const qs =require('qs');
 const funcDict=require('./funcDict');
 
+// Ajax请求各类型处理
+const contentMethods=[
+    // 0 application/json
+    {
+        // 特征字符串
+        reqContentTypeFeature:'application/json',
+        // 转换为params的方法
+        buf2params:(raw,querys)=>{
+            const params=new Array(2);
+            params[0]=JSON.parse(raw.toString('utf8'));
+            params[1]=querys;
+            return params;
+        },
+        // 输出响应的方法
+        resFunc:(res,err,params)=>{
+            // 反馈字节流及类别
+            let resultBuf,resultType;
+
+            // 有错误时
+            if(err){
+                const result={
+                    code:0,
+                    message:'',
+                    result:null
+                };
+                result.code=30;
+                switch (typeof err){
+                    case 'string':
+                        result.message=err;
+                        break;
+                    case 'number':
+                        result.code=err;
+                        break;
+                    default:
+                        result.code=err.code||30;
+                        result.message=err.msg||err.message;
+                }
+                resultType='application/json';
+                resultBuf =Buffer.from(JSON.stringify(result));
+            }
+            // 无错误，特殊参数：http
+            else if(
+                params.length ===3    &&         // 3个参数
+                params[0] ==='buffer' &&         // 第一个是表明是buffer直接反馈
+                (typeof params[1]==='string') && // 第二个是Content-Type字符串
+                Buffer.isBuffer(params[2])       // 第三个是二进制流，为反馈体本身
+            ) {
+                resultType=params[1];
+                resultBuf =params[2];
+            }
+            // 无错误，普通参数，仅能反馈第一个
+            else {
+                const result={
+                    code:0,
+                    message:'',
+                    result:null
+                };
+                result.result=params[0];
+                resultType='application/json';
+                resultBuf =Buffer.from(JSON.stringify(result));
+            }
+
+            // 转字符串输出
+            res.writeHead(200,{
+                'Content-Length': resultBuf.length,
+                'Content-Type'  : resultType,
+                'Cache-Control' : 'no-cache'
+            });
+            res.write(resultBuf);
+            res.end()
+        }
+    },
+    // 1 application/x-www-form-urlencoded
+    {
+        // 特征字符串
+        reqContentTypeFeature:'application/x-www-form-urlencoded',
+        // 转换为params的方法
+        buf2params:(raw,querys)=>{
+            const params=new Array(2);
+            params[0]=qs.parse(raw.toString('utf8'));
+            params[1]=querys;
+            return params;
+        },
+        // 输出响应的方法，与JSON相同
+        resFunc:(res,err,params)=>{
+            // 反馈字节流及类别
+            let resultBuf,resultType;
+
+            // 默认输出对象
+
+
+            // 有错误时
+            if(err){
+                const result={
+                    code:0,
+                    message:'',
+                    result:null
+                };
+                result.code=30;
+                switch (typeof err){
+                    case 'string':
+                        result.message=err;
+                        break;
+                    case 'number':
+                        result.code=err;
+                        break;
+                    default:
+                        result.code=err.code||30;
+                        result.message=err.msg||err.message;
+                }
+                resultType='application/json';
+                resultBuf =Buffer.from(JSON.stringify(result));
+            }
+            // 无错误，特殊参数：http
+            else if(
+                params.length ===3    &&         // 3个参数
+                params[0] ==='buffer' &&         // 第一个是表明是buffer直接反馈
+                (typeof params[1]==='string') && // 第二个是Content-Type字符串
+                Buffer.isBuffer(params[2])       // 第三个是二进制流，为反馈体本身
+            ) {
+                resultType=params[1];
+                resultBuf =params[2];
+            }
+            // 无错误，普通参数，仅能反馈第一个
+            else {
+                const result={
+                    code:0,
+                    message:'',
+                    result:null
+                };
+                result.result=params[0];
+                resultType='application/json';
+                resultBuf =Buffer.from(JSON.stringify(result));
+            }
+
+            // 转字符串输出
+            res.writeHead(200,{
+                'Content-Length': resultBuf.length,
+                'Content-Type'  : resultType,
+                'Cache-Control' : 'no-cache'
+            });
+            res.write(resultBuf);
+            res.end()
+        }
+    },
+];
 
 // 前端以WebSocket协议接入微服务代理类
 class c_hubWs extends c_hubCore{
@@ -56,11 +203,6 @@ class c_hubWs extends c_hubCore{
         }
     }
 
-    // api请求头信息构造
-    _apiHeaderMake(request,addition={}){
-
-    }
-
     // ajax方式POST数据接收
     async _ajaxPostData(request){
         if(request.method!=='POST') throw new Error('request is not POST');
@@ -98,17 +240,8 @@ class c_hubWs extends c_hubCore{
                     return;
                 }
 
-                // 转换为Json
-                let post;
-                try{
-                    post=JSON.parse(raw.toString('utf8'));
-                } catch (e) {
-                    reject('post data Only Support Json in UTF-8');
-                    return;
-                }
-
                 // 反馈
-                resolve(post);
+                resolve(raw);
             });
         })
     }
@@ -182,72 +315,108 @@ class c_hubWs extends c_hubCore{
         // 如不允许ajaxApi，直接报错
         if(!this._ajaxApi) throw new Error('hubWs not allow AjaxApi');
 
-        // 跨域配置
-        if(this._ajaxApi.access) response.setHeader('Access-Control-Allow-Origin', this._ajaxApi.access);
-
         // 认证当前请求对象
         await this._httpAuth.requestAuth(request);
-
-        /* 分离api、params请求参数 */
-
-        // apiUrl为去掉了请求匹配前缀后的全部
-        let api,params={};
-        {
-            const apiUrl=request.url.substr(request.url.lastIndexOf('/')+1);
-            const index=apiUrl.indexOf('?'); // 问号index
-
-            // 有
-            if(index>=0){
-                api=apiUrl.substr(0,index);
-                apiUrl.substr(index+1).split('&').forEach(kv=>{
-                    const [k,v]=kv.split('=');
-                    params[k]=(typeof v==='undefined')?null:v;
-                })
-            }
-            // 无
-            else api=apiUrl;
-        }
-
-        // 构建Heads对象
-        const apiHeader=this._apiHeaderMake(request,{
-
+        // 跨域配置
+        if(this._ajaxApi.access) response.setHeader('Access-Control-Allow-Origin', this._ajaxApi.access);
+        // 如果需要设置头信息，在此配置
+        if(request.resHeaders) request.resHeaders.forEach(str=>{
+            const index=str.indexOf(':');
+            const key  =str.substr(0,index);
+            const value=str.substr(1+index);
+            response.setHeader(key,value);
         });
 
-        // 获取post信息
-        const post=request.method==='POST'?this._ajaxPostData(request):null;
+        // 错误消息
+        let errMsg='';
 
+        /* 获取参数数组 */
+        let params;
+        let contentMethod=contentMethods[0]; // 默认json格式
+        if(request.method==='POST'){
+            // post方法时，必须从content-type识别，清空默认
+            contentMethod=null;
+            /* 根据contentType识别处理对象 */
+            const ctype=request.headers['content-type'];
+            for(let i=0;i<contentMethods.length;i++){
+                const p=contentMethods[i];
+                if(ctype.includes(p.reqContentTypeFeature)){
+                    contentMethod=p;
+                    break
+                }
+            }
 
+            // 如果此处没有，则报错终止
+            if(!contentMethod){
+                errMsg='unknow Content-Type: '+ctype
+            }
+            // 有post处理方法
+            else {
+                const raw=await this._ajaxPostData(request);
+                params=contentMethod.buf2params(raw,request.querys)
+            }
+        }
+        // 非post格式，将url请求参数放在参数数组第二项
+        else {
+            params=[null,request.querys];
+        }
+
+        if(errMsg){
+            response.writeHead(400);
+            response.end(errMsg);
+            return
+        }
+
+        /* 分离api路径 */
+        // 若有"?"，取出之前的部分
+        let index=request.url.indexOf('?'); // 问号index
+        let api=index>=0?request.url.substr(0,index):request.url;
+        // 取最后一个"/"之后的部分
+        index=api.lastIndexOf('/');
+        api=api.substr(index+1);
+
+        // 构造info
+        const info={
+            reqInfo:{
+                api:api,
+            },
+            hubInfo:{
+                hubId:this.hubId
+            },
+            httpAuth:request.httpAuth
+        };
+
+        // 调用定义时传入的方法
+        let err,resultParams;
+        try{
+            [err,...resultParams]=await this._ajaxApi.apiFunc(info,params);
+        }
+        catch (e) {
+            err=e
+        }
+
+        // 调用反馈
+        contentMethod.resFunc(response,err,resultParams)
     }
 
     // 接收http升级为websocket请求
     async upgrade(request,socket,head){
         // 认证当前请求对象
         await this._httpAuth.requestAuth(request);
-        // WebSocket连接必须有SessionId，没有需重新分配
-        if(!request.reqAuth.SessionId){
-            await this._httpAuth.setRequestNewSessionId(request);
-        }
-
-        // 分离query参数
-        const urlObj=url.parse(request.url);
-        const querys={};
-        urlObj.query.split('&').forEach(line=>{
-            const [key,value]=line.split('=');
-            querys[key]=value;
-        });
 
         /* 验证参数合法性 */
         let httpErrCode=0; // 错误代码，默认0即然没有
 
         // 取出id，authStr
-        const id=querys.id;
-        const authStr=querys.authStr;
+        const id=request.querys.id;
+        const authStr=request.querys.authStr;
+
         let wsObj;
 
-        // 请求格式错误类，反馈代码400，告知客户端不必再尝试
-        if (authStr.length<4|| authStr.length>24 || // authStr长度不合规
-            funcDict.idType(id)!=='hubCli'            // id不符合规范
-        ) httpErrCode=400;
+        // 没有设备类别，不可连接。反馈代码400，告知客户端不必再尝试
+        if(!request.httpAuth.devTyp) httpErrCode=400;
+        // 请求验证非法，报405错误
+        else if (!(await this.check_connect(id,request.httpAuth,authStr))) httpErrCode=405;
         // 尝试注册，失败则反馈代码406或407，但可以再尝试
         else {
             // 取出对象，没有则新建
@@ -258,11 +427,9 @@ class c_hubWs extends c_hubCore{
                 empSec:0  // 空闲时间，用于心跳
             };
             // 当前该id有连接，反馈错误
-            if(wsObj.ws)
-                httpErrCode=406;
-            // 当前有authStr，且与传来的不同，禁止连接
-            else if(wsObj.authStr!==authStr)
-                httpErrCode=407;
+            if(wsObj.ws) httpErrCode=406;
+            // authStr
+            else if(wsObj.authStr!==authStr) httpErrCode=407;
         }
 
         // 有错误时直接response错误信息，并结束
@@ -273,7 +440,7 @@ class c_hubWs extends c_hubCore{
         }
 
         // 显示日志
-        etools.log(`[${this.labelText}] clientId: ${id} SessionId: ${request.reqAuth.SessionId}`);
+        etools.log(`[${this.labelText}] clientId: ${id}`);
 
         // 升级连接对象
         this.server.handleUpgrade(request,socket,head,ws=>this._wsOn(id,ws,request))
@@ -296,7 +463,7 @@ class c_hubWs extends c_hubCore{
     }
 
     // 获取id关联的信息，获取不到时，返回null
-    async getIdReqAuth(id){
+    async getIdAuth(id){
         // 先获取id对应的wsObj，获取失败则返回null
         const wsObj=this._wsDict[id];
         if(!wsObj||!wsObj.ws||!wsObj.request) return null;
@@ -304,10 +471,8 @@ class c_hubWs extends c_hubCore{
         // 验证request
         await this._httpAuth.requestAuth(wsObj.request);
 
-        // 如果SessionId无效，返回null
-        if(!wsObj.request.reqAuth.SessionId) return null;
-        // 有效，反馈
-        else return wsObj.request.reqAuth;
+        // 反馈
+        return wsObj.request.httpAuth;
     }
 }
 
