@@ -97,8 +97,12 @@ const init={
         const file=process.mainModule.filename;
         const PWD=file.substr(0,1+Math.max(file.lastIndexOf('\\'),file.lastIndexOf('/')));
 
+        // 遍历插件目录
         paths.forEach(p=>{
+            // 生成绝对路径，并判定是否存在，不存在则跳过
             const dirPath=path.resolve(PWD,p);
+            if(!fs.existsSync(dirPath)) return;
+            // 遍历该路径下所有文件
             fs.readdirSync(dirPath).forEach(filename=>{
                 // 分离文件名、扩展名
                 const _fend = filename.lastIndexOf('.');

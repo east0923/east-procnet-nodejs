@@ -15,7 +15,7 @@ const path   =require('path');
 const config = {
     //mode: 'development',
     entry: {
-        client: path.resolve(__dirname,'c_clientWs.js'),
+        clientWs: path.resolve(__dirname,'c_clientWs.js'),
     },
     context:path.resolve(__dirname),
     module: {
@@ -36,7 +36,7 @@ const config = {
         ]
     },
     output: {
-        path: path.resolve(__dirname,'dist-static/'),
+        path: path.resolve(__dirname,'dist/'),
         filename: '[name].js'
     },
     optimization:{
