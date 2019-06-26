@@ -403,8 +403,15 @@ class c_clientCore{
         };
         // 解析参数
         const params=this._arry2params(eventMsg.paramsTyp,eventMsg.paramsBuf);
-        // 遍历调用执行
-        funcs.forEach(func=>func(info,...params));
+        // 遍历调用执行，如果执行出错，自动取消订阅。
+        for(const func of funcs){
+            try{
+                func(info,...params);
+            }
+            catch (e) {
+                this.eventCancel(eventName,func);
+            }
+        }
     }
     // 订阅事件
     eventBook(eventName,func){
