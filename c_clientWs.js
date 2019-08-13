@@ -183,7 +183,7 @@ class c_conn{
             // 心跳
             case '__ping':
                 this._ws.send('__pong\0');
-                // etools.log(`[${this.conf.id}] rec Server Ping`);
+                // etools.log(`[${this.conf.id}] rec Server Ping`)
                 break;
             case '__pong':
                 // etools.log(`[${this.conf.id}] rec Self Ping Back`);
