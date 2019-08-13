@@ -188,6 +188,7 @@ class c_conn{
             case '__pong':
                 // etools.log(`[${this.conf.id}] rec Self Ping Back`);
                 break;
+
             // 订阅成功
             case '__subSucc':{
                 // 取出主题对应订阅状态对象，取不到则结束
@@ -214,6 +215,7 @@ class c_conn{
                 etools.log(`[${this.conf.id}] subReject: `+topic);
                 break;
             }
+
             // 推送消息失败
             case '__pubReject':{
                 const topic=String.fromCharCode(...msg);
