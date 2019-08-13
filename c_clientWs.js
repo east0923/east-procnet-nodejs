@@ -129,13 +129,12 @@ class c_conn{
         }
 
         // 创建连接实例
-        this._ws=new c_ws(fullUrl,'*');
-
-        // 无论前后端，均指定统一消息格式
-        this._ws.binaryType='arraybuffer';
-
-        const ws=this._ws;
+        const ws=this._ws=new c_ws(fullUrl,'*');
+        // 设定消息格式
+        ws.binaryType='arraybuffer';
+        // 空闲时间归零
         this.empSec=0;
+
         ws.onopen=(...all)=>{
             if(ws!==this._ws) return;
             etools.log('Connected by clientWs: '+fullUrl);
@@ -184,10 +183,10 @@ class c_conn{
             // 心跳
             case '__ping':
                 this._ws.send('__pong\0');
-                etools.log(`[${this.conf.id}] rec Server Ping`);
+                // etools.log(`[${this.conf.id}] rec Server Ping`);
                 break;
             case '__pong':
-                etools.log(`[${this.conf.id}] rec Self Ping Back`);
+                // etools.log(`[${this.conf.id}] rec Self Ping Back`);
                 break;
             // 订阅成功
             case '__subSucc':{
@@ -199,7 +198,7 @@ class c_conn{
                 // 将订阅状态标记为成功
                 subObj.state=4;
 
-                etools.log(`[${this.conf.id}] subSucc  : `+topic);
+                //etools.log(`[${this.conf.id}] subSucc  : `+topic);
                 break;
             }
             // 订阅被拒绝

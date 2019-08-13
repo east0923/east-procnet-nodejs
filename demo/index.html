@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-    <script src="webClientWs.js"></script>
+    <script src="clientWs.js"></script>
     <script>
-        var proc=new c_clientWs.c_client('ws://localhost:9988/api/',{
-            devTyp:'screen',
+        var proc=new c_clientWs.c_client('ws://localhost:9524/boxHub/',{
+            devTyp:'box3',
+            devNo:'hostname',
             devSt:Date.now(),
             devPass:'helloPass'
         })
